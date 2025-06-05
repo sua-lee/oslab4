@@ -190,3 +190,4 @@ void            clearpteu(pde_t *pgdir, char *uva);
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
 int printpt(int pid);
+int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
