@@ -77,7 +77,10 @@ cprintf(char *fmt, ...)
     c = fmt[++i] & 0xff;
     if(c == 0)
       break;
-    switch(c){
+    switch(c){    
+    case 'c': //cprintf의 %c에 대응하는 부분 추가
+      consputc(*argp++);
+      break; 
     case 'd':
       printint(*argp++, 10, 1);
       break;

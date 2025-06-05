@@ -35,7 +35,7 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
-static pte_t *
+pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
@@ -60,7 +60,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
-static int
+int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
@@ -327,24 +327,28 @@ copyuvm(pde_t *pgdir, uint sz)
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
-
-  if((d = setupkvm()) == 0)
+ 
+  if((d = setupkvm()) == 0){
     return 0;
-  for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-      panic("copyuvm: pte should exist");
-    if(!(*pte & PTE_P))
-      panic("copyuvm: page not present");
-    pa = PTE_ADDR(*pte);
-    flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto bad;
-    memmove(mem, (char*)P2V(pa), PGSIZE);
-    if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
-      goto bad;
   }
+  for(i = 0; i < KERNBASE; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0){
+      continue;
+    }
+    if(!(*pte & PTE_P)){ 
+      continue;
+    }
+    pa = PTE_ADDR(*pte);             
+    flags = PTE_FLAGS(*pte);
+    if((mem = kalloc()) == 0){
+      goto bad;
+    } 
+    memmove(mem, (char*)P2V(pa), PGSIZE); //dest, src, size
+    if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0){
+      goto bad;
+    }
+  } 
   return d;
-
 bad:
   freevm(d);
   return 0;
