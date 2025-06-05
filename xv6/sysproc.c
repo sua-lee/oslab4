@@ -42,18 +42,21 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
+// 지연 할당(lazy allocation)을 위해 수정된 growproc 함수를 호출합니다.
+// growproc 함수 자체는 proc.c에 있어야 합니다.
 int
 sys_sbrk(void)
 {
   int addr;
   int n;
+  struct proc *curproc = myproc(); // myproc() 호출을 통해 현재 프로세스 정보를 가져옵니다.
 
-  if(argint(0, &n) < 0)
+  if(argint(0, &n) < 0) // 인자로 받은 n 값을 가져옵니다.
     return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
+  addr = curproc->sz;    // 현재 프로세스의 크기를 addr에 저장합니다.
+  if(growproc(n) < 0)    // growproc을 호출하여 프로세스 크기를 n만큼 변경합니다.
     return -1;
-  return addr;
+  return addr;           // 변경 전의 크기(break point)를 반환합니다.
 }
 
 int

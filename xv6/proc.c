@@ -164,7 +164,7 @@ userinit(void)
   release(&ptable.lock);
 }
 
-// Grow current process's memory by n bytes.
+// Grow or shrink process memory by n bytes.
 // Return 0 on success, -1 on failure.
 int
 growproc(int n)
@@ -174,15 +174,18 @@ growproc(int n)
 
   sz = curproc->sz;
   if(n > 0){
-    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+    if((sz + n) >= KERNBASE) // 커널 공간을 침범하지 않는지 확인
       return -1;
-  } else if(n < 0){
-    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
-      return -1;
+    curproc->sz = sz + n;
+  } else if (n < 0) {
+    int new_size = sz + n;
+    if (new_size < 0) // 새 크기가 음수가 되지 않도록 방지
+        return -1;
+    sz = deallocuvm(curproc->pgdir, sz, new_size); // 페이지 해제 및 PTE 업데이트
+        return -1;
+    curproc->sz = sz;
   }
-  curproc->sz = sz;
-  switchuvm(curproc);
-  return 0;
+  return 0; // 성공
 }
 
 // Create a new process copying p as the parent.
