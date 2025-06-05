@@ -41,6 +41,8 @@ idtinit(void)
 void
 trap(struct trapframe *tf)
 {
+  uint va;
+	char* mem;
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
       exit();
@@ -88,8 +90,8 @@ trap(struct trapframe *tf)
 
   // added
 	case T_PGFLT:
-		uint va = PGROUNDDOWN(rcr2()); 
-		char* mem=kalloc();
+		va = PGROUNDDOWN(rcr2()); 
+		mem=kalloc();
 		if(mem==0){
 			cprintf("allocuvm out of memory\n");
 			break;
